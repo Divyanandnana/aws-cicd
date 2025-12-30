@@ -3,17 +3,25 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region us-east-1 |
-        docker login --username AWS --password-stdin 858431073280.dkr.ecr.us-east-1.amazonaws.com
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 858431073280.dkr.ecr.us-east-1.amazonaws.com
 
   build:
     commands:
-      - echo Build started on `date`
+      - echo "Build started on `date`"
+      - echo "Building Maven project..."
       - mvn clean package -DskipTests
+      - echo "Building Docker image..."
       - docker build -t cicd-registry:latest .
 
   post_build:
     commands:
+      - echo "Tagging Docker image..."
       - docker tag cicd-registry:latest 858431073280.dkr.ecr.us-east-1.amazonaws.com/cicd-registry:latest
+      - echo "Pushing Docker image to ECR..."
       - docker push 858431073280.dkr.ecr.us-east-1.amazonaws.com/cicd-registry:latest
+      - echo "Build and push completed on `date`"
+
+artifacts:
+  files:
+    - target/*.jar

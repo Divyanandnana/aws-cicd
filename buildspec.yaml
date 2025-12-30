@@ -21,7 +21,8 @@ phases:
       - echo "Pushing Docker image to ECR..."
       - docker push 858431073280.dkr.ecr.us-east-1.amazonaws.com/cicd-registry:latest
       - echo "Build and push completed on `date`"
+      - printf '[{"name":"cicd-registry","imageUri":"%s"}]' 858431073280.dkr.ecr.us-east-1.amazonaws.com/cicd-registry:latest > imagedefinitions.json
 
 artifacts:
   files:
-    - target/*.jar
+    - imagedefinitions.json

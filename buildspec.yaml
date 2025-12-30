@@ -3,30 +3,17 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - mvn clean install
       - echo Logging in to Amazon ECR...
-      - aws --version
-      - REPOSITORY_URI=858431073280.dkr.ecr.us-east-1.amazonaws.com/cicd-registry
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
-      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+      - aws ecr get-login-password --region us-east-1 |
+        docker login --username AWS --password-stdin 858431073280.dkr.ecr.us-east-1.amazonaws.com
 
   build:
     commands:
       - echo Build started on `date`
-      - docker build -t $REPOSITORY_URI:latest .
-      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+      - mvn clean package -DskipTests
+      - docker build -t cicd-registry:latest .
 
   post_build:
     commands:
-      - docker push $REPOSITORY_URI:latest
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - DOCKER_CONTAINER_NAME=cicd-registry
-      - printf '[{"name":"%s","imageUri":"%s"}]' $DOCKER_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      - cat imagedefinitions.json
-
-artifacts:
-  files:
-    - imagedefinitions.json
-    - target/course-service.jar
-
-
+      - docker tag cicd-registry:latest 858431073280.dkr.ecr.us-east-1.amazonaws.com/cicd-registry:latest
+      - docker push 858431073280.dkr.ecr.us-east-1.amazonaws.com/cicd-registry:latest
